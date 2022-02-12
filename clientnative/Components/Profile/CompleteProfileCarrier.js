@@ -41,12 +41,19 @@ const CompleteProfileCarrier = (props) => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const datosCarrier = useSelector((store) => store.responseLog);
-
-
+  useEffect(() => {
+    if(datosCarrier.business != null){
+      console.log("business",datosCarrier.business)
+  navigation.navigate('ProfileCarrier')
+    }
+}, [datosCarrier.business]);
+  
   useEffect(() => {
     console.log("SOY DATOS DEL CARRIER", datosCarrier);
-    if(datosCarrier.business !== null){
-    navigation.navigate('ProfileCarrier')
+    if(datosCarrier) {
+      if(datosCarrier.business !== null){
+      navigation.navigate('ProfileCarrier')
+      }
     }
   }, [datosCarrier]);
 
@@ -398,7 +405,7 @@ const CompleteProfileCarrier = (props) => {
 
     dispatch(completeProfileCarrier(obj));
     console.log("soy lo que se envia", obj);
-    navigation.navigate('ProfileCarrier')
+    
    
     // changeModalVisible(true)
     

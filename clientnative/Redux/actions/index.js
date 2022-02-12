@@ -28,6 +28,21 @@ export function userStatus () {
 } */
 
 
+export function updateAccesToken (props) {
+  return async function(dispatch) {
+    try {
+      const update = await axios.post(`${API_URLS}/api/updateToken`, props)
+      return dispatch ({
+        type: 'UPDATE_ACCESS_TOKEN',
+        payload: update.data
+      })
+    } catch (error) {
+        console.log("Error", error)
+    }
+  }
+}
+
+
 export function requestCarrier (props) {
   return async function (dispatch) {
     try {
@@ -130,6 +145,17 @@ export function reset(){
   }
 }
 
+export function clearResp (){
+  return async function (dispatch){
+    try {
+      return dispatch({
+        type: 'CLEAR_RESP'
+      })
+    } catch (error) {
+      console.log("Error", error)
+    }
+  }
+}
 export function deleteFleet (props) {
   return async function (dispatch) {
     try {
@@ -264,9 +290,23 @@ export function completeProfileCarrier(payload) {
           payload
         );
         console.log('Soy el console.log de responsecomplete', response.data.payload2[1][0])
+
+
+       const newobj = {... response.data.payload2[1][0], 
+        "carrierPaymentData" : {
+        carrierToken : false, 
+        amount: 0, 
+    } 
+  }
+
+  console.log("newobj",newobj)
+
+
+
+
         return dispatch({
           type: "COMPLETE_PROFILE_CARRIER",
-          payload: response.data.payload2[1][0],
+          payload: newobj,
         });
       } catch (error) {
         console.log(error.response);

@@ -2,8 +2,7 @@ import { Response, Request, Router, NextFunction } from 'express';
 import { uuid } from 'uuidv4';
 import passport from 'passport';
 import { Signup } from '../models/Signup';
-// import { User } from '../models/User';
-// import { Carrier } from '../models/Carrier';
+
 import jwt from 'jsonwebtoken'
 import config from "../../config/config"
 const bcrypt = require("bcryptjs");
@@ -41,7 +40,7 @@ router.post('/verifytoken', async (req: Request, res: Response, next: NextFuncti
         const decoded: any = jwt.verify(token, config.jwtSecret)
 
         const dataUser = await Signup.findByPk(decoded.id)
-
+            console.log("id.dataUser", dataUser)
         // const user = await Signup.findAll({ where: { id: dataUser!.id } })
 
         let carrierPaymentData = {
@@ -49,14 +48,12 @@ router.post('/verifytoken', async (req: Request, res: Response, next: NextFuncti
             amount: 0, 
 
         }
-        
         if(dataUser && dataUser.role === false && dataUser.phone){
 
             let carrier = await Truck.findAll({where:{
                 SignupId: dataUser.id
             }})
-            console.log(carrier[0], "este es el carrier")
-
+            console.log(carrier[0].id, "este es el carrier")
             let carrierToken = carrier[0].acesstoken
 
             carrierPaymentData.carrierToken = carrierToken != null
@@ -64,8 +61,10 @@ router.post('/verifytoken', async (req: Request, res: Response, next: NextFuncti
             let amount =  await Payment.findAll({where:{
                 TruckId : carrier[0].id
             }})
-        
-            carrierPaymentData.amount = amount[0]?.amount
+
+            console.log("amount", amount)
+            
+            carrierPaymentData.amount = amount.length>0 ? amount[0].amount : 0;
             }    
         
 

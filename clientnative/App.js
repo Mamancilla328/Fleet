@@ -26,7 +26,7 @@ import RecoverPassword from './Components/Home/RecoverPassword'
 import ScreenMap from "./Components/ViewMaps/ScreenMap";
 import Mercadopago from "./Components/MercadoPago/Mercadopago";
 import StartCarrier from './Components/Travel/StartCarrier';
-
+import ScreenAccessToken from './Components/MercadoPago/ScreenAccessToken.js'
 
 
 LogBox.ignoreLogs([
@@ -141,6 +141,16 @@ const App = () => {
               name="StartCarrier"
               component={StartCarrier}
               options={{ headerShown: false }}
+            />
+              <Stack.Screen
+              name="RecoverPassword"
+              component={RecoverPassword}
+              options={{ headerShown: false }}
+              />
+            <Stack.Screen
+            name="ScreenAccessToken"
+            component={ScreenAccessToken}
+            options={{headerShown:false}}
             />
           </Stack.Navigator>
         </NavigationContainer>
