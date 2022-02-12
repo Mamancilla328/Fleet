@@ -39,22 +39,24 @@ router.post('/verifytoken', async (req: Request, res: Response, next: NextFuncti
     const { token } = req.body;
     try {
         const decoded: any = jwt.verify(token, config.jwtSecret)
+
         const dataUser = await Signup.findByPk(decoded.id)
 
-        const user = await Signup.findAll({ where: { id: dataUser!.id } })
+        // const user = await Signup.findAll({ where: { id: dataUser!.id } })
 
         let carrierPaymentData = {
             carrierToken : false, 
             amount: 0, 
 
         }
-        if(user && user[0].phone){
-        if(user && user[0].role === false){
+        
+        if(dataUser && dataUser.role === false && dataUser.phone){
 
             let carrier = await Truck.findAll({where:{
-                SignupId: user[0].id
+                SignupId: dataUser.id
             }})
             console.log(carrier[0], "este es el carrier")
+
             let carrierToken = carrier[0].acesstoken
 
             carrierPaymentData.carrierToken = carrierToken != null
@@ -63,9 +65,9 @@ router.post('/verifytoken', async (req: Request, res: Response, next: NextFuncti
                 TruckId : carrier[0].id
             }})
         
-            carrierPaymentData.amount = amount[0].amount
+            carrierPaymentData.amount = amount[0]?.amount
             }    
-        }
+        
 
 
         if (dataUser) {
@@ -81,7 +83,7 @@ router.post('/verifytoken', async (req: Request, res: Response, next: NextFuncti
                 business:dataUser?.business,
                 saldo:dataUser?.saldo,
                 locacion:dataUser?.locacion,
-                carrierPaymentData: user[0].role === false ? carrierPaymentData : {},
+                carrierPaymentData: dataUser.role === false ? carrierPaymentData : {},
                 // idRole: dataUser.role,
                 mensaje: true
             }

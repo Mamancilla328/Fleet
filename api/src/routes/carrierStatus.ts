@@ -159,6 +159,7 @@ router.get("/FleetStatus", async (req: Request, res: Response, next: NextFunctio
 
   let on = await Truck.findAll({
     where: {
+      
       status: true
     },
     include: [{
