@@ -1,6 +1,7 @@
 import { Response, Request, Router, NextFunction } from 'express';
 import { Truck } from '../models/Truck';
 import { Signup } from '../models/Signup';
+import { Payment } from '../models/Payment';
 const router = Router()
 
 
@@ -128,29 +129,6 @@ router.post('/StatusOn', async (req: Request, res: Response, next: NextFunction)
   }
 
 
-  //-------------------->ESTO NO FUNCIONA<-----------------//
-
-  // if(user){
-
-  //     const userStatus = user[0].status
-  //     //console.log(userStatus)
-  //     //const changeStatus = !userStatus
-  //     //console.log(changeStatus)
-
-  //     let upDateThis: any = {}
-  //      //console.log(upDateThis)
-
-  //     if(userStatus){upDateThis.status = !userStatus}
-
-  //     const changeStatus = await Truck.update(upDateThis, {where:{
-  //         SignupId: id, 
-  //     }})
-
-  //     // const newStatus = changeStatus[0].status
-
-  //     return res.status(200).json({"msg":"Cambio el status", changeStatus})
-
-  // }
 })
 
 router.get("/FleetStatus", async (req: Request, res: Response, next: NextFunction) => {
@@ -159,12 +137,13 @@ router.get("/FleetStatus", async (req: Request, res: Response, next: NextFunctio
 
   let on = await Truck.findAll({
     where: {
-      
       status: true
     },
     include: [{
       model: Signup
-    }]
+    }, {
+        model: Payment
+    }],
   });
   let inSevice = await Truck.findAll({
     where: {
@@ -172,6 +151,8 @@ router.get("/FleetStatus", async (req: Request, res: Response, next: NextFunctio
     },
     include: [{
       model: Signup
+    }, {
+        model: Payment
     }]
   });;
   let off = await Truck.findAll({
@@ -179,9 +160,13 @@ router.get("/FleetStatus", async (req: Request, res: Response, next: NextFunctio
       status: null
     },
     include: [{
-      model: Signup
+        model: Signup,
+    },{
+        model: Payment
     }]
   });
+
+
 
   return res.status(200).json({ "Fuera_de_servicio": off, "Disponibles": on, "Ocupados": inSevice })
 
@@ -240,40 +225,7 @@ router.get('/StatusAvailable', async (req: Request, res: Response, next: NextFun
 
 })
 
-router.get("/FleetStatus", async (req: Request, res: Response, next: NextFunction) => {
 
-    // let {status}=req.params
-
-    let on = await Truck.findAll({where:{
-        status: true},
-        raw: true
-    });
-    let inSevice = await Truck.findAll({where:{
-        status: false},
-        raw: true
-    });;
-    let off = await Truck.findAll({where:{
-        status: null},
-        raw: true
-    });
-
-    return res.status(200).json({"Fuera de servicio":off, "Disponibles":on, "Ocupados":inSevice })
-
-    // if( on ){
-    //     return res.status(200).json({"msg":"Disponibles", on})
-    // }else if (inSevice){
-    //     return res.status(200).json({"msg":"Ocupados", inSevice})
-    // }else if (off){
-    //     return res.status(200).json({"msg":"Ausentes", off})
-    // }else{
-    //    let  allCarrierData = await Truck.findAll({
-    //     include:[{
-    //         model:Signup
-    //     }]
-    //    })
-    //    return res.status(200).json({allCarrierData})
-    // }
-})
 
 // router.get('/CarrrierDetails',async(req:Request,res:Response,next:NextFunction)=>{
 //     let {id}=req.params
