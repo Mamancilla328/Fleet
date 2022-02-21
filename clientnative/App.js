@@ -27,6 +27,8 @@ import ScreenMap from "./Components/ViewMaps/ScreenMap";
 import Mercadopago from "./Components/MercadoPago/Mercadopago";
 import StartCarrier from './Components/Travel/StartCarrier';
 import ScreenAccessToken from './Components/MercadoPago/ScreenAccessToken.js'
+import HistoryCarrier from "./Components/Historial de viaje/HistoryCarrier"
+import MapTravel from './Components/ViewMaps/MapTravel'
 
 
 LogBox.ignoreLogs([
@@ -47,7 +49,7 @@ const App = () => {
       <Provider store={store}>
         <NavigationContainer>
           <Stack.Navigator>
-          <Stack.Screen
+            <Stack.Screen
               name="Home"
               component={Home}
               options={{ headerShown: false }}
@@ -75,6 +77,11 @@ const App = () => {
             <Stack.Screen
               name="ScreenMap"
               component={ScreenMap}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="MapTravel"
+              component={MapTravel}
               options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
@@ -137,20 +144,30 @@ const App = () => {
               component={VehiculeDetails}
               options={{ headerShown: false }}
             />
-              <Stack.Screen
+            <Stack.Screen
               name="StartCarrier"
               component={StartCarrier}
               options={{ headerShown: false }}
             />
-              <Stack.Screen
+            <Stack.Screen
               name="RecoverPassword"
               component={RecoverPassword}
               options={{ headerShown: false }}
-              />
+            />
             <Stack.Screen
-            name="ScreenAccessToken"
-            component={ScreenAccessToken}
-            options={{headerShown:false}}
+              name="ScreenAccessToken"
+              component={ScreenAccessToken}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Mercadopago"
+              component={Mercadopago}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="HistoryCarrier"
+              component={HistoryCarrier}
+              options={{ headerShown: false }}
             />
           </Stack.Navigator>
         </NavigationContainer>

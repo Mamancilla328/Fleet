@@ -28,6 +28,8 @@ const HistorialDeViaje = () => {
   const user = useSelector((store) => store.userStatus)
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  
+  
 
   useEffect(() => {
     dispatch(userStatus())
@@ -37,15 +39,25 @@ const HistorialDeViaje = () => {
     }
   }, [dispatch])
 
-  console.log("Esto serian los users:", user)
+  console.log("Esto serian los usersWWWWWWWWWWW:", user)
 
   const CarrierContainer = (props) => {
     console.log("ESTO ES LO QUE LE VA A LLEGAR AL COMPONENTE", props)
+  
+
 
     return (
       <View>
         {
           props.length !== 0 ? props.map((e, index) => {
+
+            const propss = {
+              amount : e.payment.length?e.payment.filter(p=>p.status===false)[0]?.amount:0,
+              acesstoken: e.acesstoken,
+              id:e.SignupId
+
+            }
+            console.log("hola",propss)
             return (
               <View style={styles.viewUsers} key={index}>
                 <Image source={{
@@ -62,8 +74,8 @@ const HistorialDeViaje = () => {
                     <TouchableOpacity style={styles.btnText}>
                       <Text style={{ fontSize: wp('2.3%') }}> HISTORIAL DE VIAJES  </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnText} onPress={() => navigation.navigate('Mercadopago')}>
-                      <Text style={{ fontSize: wp('2.3%') }}> SALDO GENERADO </Text>
+                    <TouchableOpacity style={styles.btnText} onPress={() => navigation.navigate('Mercadopago',propss)}>
+                      <Text style={{ fontSize: wp('2.3%') }}> SALDO GENERADO: ${propss.amount||0} </Text>
                     </TouchableOpacity>
                   </View>
                   <View style={styles.flexbtn}>
@@ -91,7 +103,7 @@ const HistorialDeViaje = () => {
   return (
     <View style={{ backgroundColor: "white", flex: 1 }}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <HeaderBar screen={"null"} />
+        <HeaderBar screen={"ProfileAdmin"} />
         <View style={styles.containerHeaders}>
           <View style={{ flexDirection: 'row' }}>
             <Text style={{ fontSize: hp("2.5%"), fontWeight: "bold" }}>

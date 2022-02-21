@@ -17,33 +17,41 @@ const router=Router()
 //   });
 
 router.post("/mercadopago", async (req, res) => {
-  const { title, unit_price, id} = req.body;
-  //console.log(req.body);
-
-  let truck = await Truck.findAll({where:{
-    SignupId: id
-  }})
-
-  let paymentData = await Payment.findAll({where:{
-    TruckId: truck[0].id
-  }})
-
-  let amount = paymentData[0].amount
-
+  const { unit_price, access_token, title, quantity,id } = req.body;
+  console.log("ESTO ES ACCES TOKEN" , access_token)
+  // let carrier = await 
+  console.log("ESTO ES REQ.BODY", req.body);
   try {
+
+    let idTruck= await Truck.findOne({
+      where:{
+        SignupId:id
+      }
+    })
+
+    console.log('TRUCK',idTruck)
+    if(idTruck){
+      await Payment.update({status:true},{where:{TruckId:idTruck.id}})
+      await Travel.update({finishedTravel:'finish',statusPay:'pay'},{where:{truckId:idTruck.id}})
+
+    }
+
+
+
+
     mercadopago.configure({
-      access_token:
-        "TEST-4261065072334441-020320-579a9756136c4e30a0ce0b4f11322878-177928098",
+      access_token: access_token,
     });
 
     let preference = {
       "items": [
           {
-             "title": "Dummy Item Title",
+            "id":id,
+             "title": title,
                   "description": "Dummy Item Description",
-                  "quantity": 1,
+                  "quantity": quantity,
                   "currency_id": "ARS",
-                  "unit_price": amount
+                  "unit_price": unit_price
           }
       ],
       "payer": {
@@ -51,16 +59,16 @@ router.post("/mercadopago", async (req, res) => {
       },
       "auto_return": "all",
       "back_urls" : {
-          "failure": "https://superfleetback.herokuapp.com/api/render?x=0",
-          "pending": "https://superfleetback.herokuapp.com/api/render?x=1",
-          "success": "https://superfleetback.herokuapp.com/api/render?x=2"
+          "failure": `https://superfleetback.herokuapp.com/api/render?x=0`,
+          "pending": `https://superfleetback.herokuapp.com/api/render?x=1`,
+          "success": `https://superfleetback.herokuapp.com/api/render?x=2`
       }
   }
 
     let answer = await mercadopago.preferences.create(preference);
 
     const response = answer.body.id;
-    const init_points = answer.body.init_point;
+    const init_points = answer.body.sandbox_init_point;
 
     res.json({ response, init_points });
   } catch (err) {
@@ -103,12 +111,17 @@ catch(err){
 //   }
 // })
 
-router.get('/render', (req: Request , res: Response, ) => {
+router.get('/render', async(req: Request , res: Response, ) => {
 
   let {x} = req.query
   // const {id} = req.params
 
+  
+
   if(x === "0"){
+
+
+    
       return   res.send(`
       <body style="background-color:red; color: white " >
       <img src="https://user-images.githubusercontent.com/70895686/153325791-f3df7c3a-84d1-4d71-a35a-96f6be0f611e.png" style="display: block;
@@ -138,14 +151,14 @@ router.get('/render', (req: Request , res: Response, ) => {
 
   if(x==="2"){
     return   res.send(`
-    <body style="background-color:green; color: white " >
+    <body style="background-color:white; color: white " >
     <img src="https://user-images.githubusercontent.com/70895686/153325791-f3df7c3a-84d1-4d71-a35a-96f6be0f611e.png" style="display: block;
     margin-left: auto;
     margin-right: auto;
     width:300px;
     height:300px;
     " />
-      <h1 style="text-align:center ; margin-top: 15vh ; font-size: 70px">Pago exitoso!</h1>
+      <h1 style="text-align:center ; margin-top: 15vh ; font-size: 70px; color: #009de2 ">Pago exitoso!</h1>
     </body>
   `)
   }
@@ -173,6 +186,44 @@ router.get('/payment/:truckId', async (req: Request, res: Response , next: NextF
     })
 
     res.json({payment,amount})
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/amountCarrier/:idSignup', async (req: Request, res: Response , next: NextFunction) => {
+
+  const {idSignup} = req.params
+  try {
+
+    let truckId=await Truck.findOne({
+      where:{
+        SignupId:idSignup
+      }
+    })
+    if(truckId){
+      let payment = await Payment.findAll({
+        where: {
+          status:false,
+          TruckId: truckId.id//falta ver el status
+        },attributes: [ 'amount' ]
+      });
+      if(payment.length){
+        let saldo=payment.map(p=>Number(p.amount)).reduce((previousValue, currentValue) => previousValue + currentValue)
+      
+      res.json({menssage:'Saldo',payload:saldo})
+      }
+         
+      res.json({menssage:'Saldo',payload:0})
+
+
+    }
+
+    
+
+
+  
 
   } catch (error) {
     next(error);

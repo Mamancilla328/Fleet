@@ -8,6 +8,7 @@ import { Carrier } from '../models/Carrier';
 import { Truck } from '../models/Truck';
  
 import { Signup } from '../models/Signup';
+import { Payment } from '../models/Payment';
  
 
 const router = Router()
@@ -154,80 +155,10 @@ router.post('/requestTravel', async (req: Request, res: Response, next: NextFunc
 
 
 
-// router.get('/Travel/:latitude/:longitude', async (req: Request, res: Response, next: NextFunction) => {
 
-//   const{latitude,longitude}=req.params
-//   let origin=`${String(latitude)}`
-//   // console.log(origin.split('.')[0])
-
-//   // -34.6036844/-58.3815591/Buenos Aires, Argentina
-//   // {
-//   //   "latitude": -38.927636,
-//   //   "latitudeDelta": 0.0922,
-//   //   "longitude": -68.0710125,
-//   //   "longitudeDelta": 0.0421,}
-
-//   if(latitude){
-//     try{
-//         // console.log(origin)
-//       let travel=await Travel.findAll({
-//         where:{
-
-//           [Op.and]:[{orig:{[Op.startsWith]:`${origin.split('.')[0]}`}},{truckId:{[Op.eq]:null}}]
-
-//         },
-//         include:Signup
-//       })
-//       res.send(travel)
-
-//     }catch(err){
-//       next(err)
-//     }
-
-//   }else{
-//       try {
-//     //Importante en el modelo de travel hay un error en declaración de la relacion con user User_Reg
-//     //hay que corregir que es de tipo string 
-//     /* let travel = await Travel.findAll() */
-//     const travel = await Travel.findAll({
-//       where:{
-//         truckId:{[Op.eq]:null}
-//       },
-//       include:[Signup,Truck]
-//     }) 
-
-  
-//    res.send(travel);
-//     // if (travel.length > 0) {
-//     //   let tam = travel.length;
-//     //   var travelFullData = [];
-//     //   for (let i = 0; i < tam; i++) {
-
-//     //     let varUser = await Carrier.findAll({ where: { id: travel[i].adminId } })
-//     //     let varUserReg = await Signup.findOne({ where: { id: varUser[0].SignupId } });
-//     //     travelFullData[i] = { travel: travel[i], user: varUser[0], userReg: varUserReg }
-//     //   }
-//     //   return res.send(travelFullData)
-//     // }
-//     //res.send('data not found')
-//     //por consola me aparece:"Executing (default): SELECT "id", "ducumentoIdentidad", "eMail", "ubicacion", "cel", "tel", "fotoPerfil", "medioPago", "name", "lastName", "paswword", "terminosCondiciones", "createdAt", "updatedAt" FROM "Users" AS "User";"
-//     //no pude corregirlo!!
-//   }
-//   catch (err) {
-//     next(err)
-//   }
-//   }
-
-
-
-
-// });
 
 router.get('/Travel', async (req: Request, res: Response, next: NextFunction) => {
 
-  
-
-  
    try {
     //Importante en el modelo de travel hay un error en declaración de la relacion con user User_Reg
     //hay que corregir que es de tipo string 
@@ -248,8 +179,37 @@ router.get('/Travel', async (req: Request, res: Response, next: NextFunction) =>
   }
   
 
+});
 
+router.get('/alltraveltruck/:signupId', async (req: Request, res: Response, next: NextFunction) => {
+  const {signupId } = req.params
+  
+  
+  try {
 
+    let truckId = await Truck.findOne({ where: { SignupId: signupId } });
+ 
+    let travelinprocess = await Travel.findAll({
+     where:{
+       truckId:{[Op.eq]:truckId?.id}, finishedTravel: "process"
+     }
+   }) 
+
+  let travelfinished = await Travel.findAll({
+    where:{
+      truckId:{[Op.eq]:truckId?.id}, finishedTravel: "finished"
+    }
+  })
+
+  console.log("ESTO ES EN /alltraveltruck", { "travelinprocess":travelinprocess[0].id , "travelfinished": travelfinished } )
+  
+  return res.status(200).json({ "travelinprocess":travelinprocess , "travelfinished": travelfinished });
+
+ }
+ catch (err) {
+   next(err);
+ }
+ 
 
 });
 
@@ -282,27 +242,53 @@ router.put('/acceptTravel', async (req: Request, res: Response, next: NextFuncti
   
   });
 
-router.get('/userTravel/:idRole',async(req:Request,res:Response,next:NextFunction)=>{
+router.get('/carrierTravel/:idCarrier',async(req:Request,res:Response,next:NextFunction)=>{
 
-  const { idRole }=req.params
+  const { idCarrier }=req.params
   console.log("ESTO ES REQUEST PARAM",req.params)
+  
   try{
 
-    let userTravel=await Travel.findAll({
+    let idTruck= await Truck.findOne({
       where:{
-        [Op.and]: [{userId:idRole }, { finishedTravel: null }],
-
+        SignupId:idCarrier
       }
     })
+    if(idTruck){
+      
+      let carrierTravel=await Travel.findAll({
+      where:{
+        [Op.and]: [{truckId:idTruck.id }, { finishedTravel: 'process' }],
 
-    if(!userTravel.length){
-      return res.send('user sin travel')
+      }})
+
+      if(!carrierTravel.length){
+        return res.json({menssage:'user travel',payload:carrierTravel})
+      }else{
+        return res.json({menssage:'user travel',payload:carrierTravel})
+      }
+      
+      
+
+
+    
+
+
+
+    }else{
+      return res.json({menssage:'user travel',payload:[]})
     }
-    res.json({menssage:'user travel',payload:userTravel})
+    
+
+    
+
+   
+    
 
 
 
   }catch(e){
+    
     next(e)
   }
 
@@ -351,8 +337,20 @@ router.post('/confirmTravel', async (req:Request,res:Response,next:NextFunction)
       { finishedTravel: "process", truckId: idCarrier.id },
       { where: { id: id },
       returning: true, }
+
+      
     );
-    console.log("ESTO DEVUELVE CONFIRM TRAVEL,", confirm);
+    let changeStatusTruck= await Truck.update({status:false},{where:{
+      SignupId:userId
+
+    }})
+    // let payment= await Payment.create({
+    //   id:uuid(),
+    //   amount:Number(confirm[1][0].price),
+    //   status:true,
+    //   TruckId:idCarrier.id
+    // })
+    // console.log("ESTO DEVUELVE CONFIRM TRAVEL,", confirm);
     return res.send(confirm);
     }
     return res.send('not found carrier')
@@ -362,6 +360,65 @@ router.post('/confirmTravel', async (req:Request,res:Response,next:NextFunction)
   } catch (error) {
     next(error);
   }
+})
+
+
+router.post('/finishTravel/:idTravel',async(req:Request,res:Response,next:NextFunction)=>{
+
+  const{idTravel}=req.params
+
+  try{
+
+    let finishTravel=await Travel.findOne({//encuentro el travel
+      where:{
+        id:idTravel,
+        finishedTravel:'process'
+
+      }
+    })
+
+    if(!finishTravel){
+      return res.json({menssage:`Not found Travel id:${idTravel}`})
+    }
+
+    let payment= await Payment.findOne({
+      where:{
+        TruckId:finishTravel.truckId,
+        status:false
+      }
+    })
+
+    let statusTruck=await Truck.update({status:true},{where:{id:finishTravel.truckId}})
+
+    //si hay un payment para ese carrier q no esta pagado status:false
+    if(payment){
+      let amount=Number(payment.amount)
+      let price=Number(finishTravel.price)
+      let sum=amount+price
+
+      let paymentUpDateAmount= await payment.update({amount:sum})
+
+      let updateTravel= await finishTravel.update({finishedTravel:'pending',returning: true})
+
+      return res.json({menssje:'Finish travel',payload:updateTravel,paymentUpDateAmount})
+    }
+    
+    //si no hay payment lo creo
+    let updateTravel= await finishTravel.update({finishedTravel:'pending',returning: true})
+
+    let newPayment= await Payment.create({
+      id:uuid(),
+      amount:Number(finishTravel.price),
+      status:false,
+      TruckId:finishTravel.truckId
+    })
+
+    return res.json({menssje:'Finish travel',payload:updateTravel,newPayment})
+
+  }catch(err){
+    next(err)
+  }
+
 })
 
 

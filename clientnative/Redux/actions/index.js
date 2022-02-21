@@ -227,6 +227,23 @@ export function logiar(payload) {
     };
 }
 
+export function getTravelCarrier(idCarrier) {
+  console.log("AAAAAAAAAAAAAAAAAAA",idCarrier)
+  return async function (dispatch) {
+    try {
+      const request = await axios.get(`${ API_URLS }/api/carrierTravel/${idCarrier}`);
+      return dispatch({
+        type: "CARRIER_TRAVEL",
+        payload: request.data,
+      });
+    } catch (error) {
+      console.log("Error", error);
+    }
+  };
+}
+
+
+
 export function adminregister(payload) {
     return async function () {
       try {
@@ -365,6 +382,21 @@ export function reqTravelConfirm (payload) {
       const confirm = await axios.post(`${ API_URLS }/api/confirmTravel`, payload);
       return dispatch({
         type: "CONFIRME_REQUEST",
+        payload: confirm.data
+      })
+    } catch (error) {
+      console.log("Error", error)
+    }
+  }
+}
+
+export function alltravelstruck (signupId) {
+  return async function (dispatch) {
+    try {
+      const confirm = await axios.get(`${ API_URLS }/api/alltraveltruck/${signupId}`);
+      console.log("Leegando a la action alltravelstruck ",confirm.data);
+      return dispatch({
+        type: "ALL_TRAVELS_TRUCK",
         payload: confirm.data
       })
     } catch (error) {
