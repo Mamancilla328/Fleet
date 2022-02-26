@@ -7,6 +7,8 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  ImageBackground,
+  Modal
 } from "react-native";
 import { useEffect, useState } from "react";
 import React from "react";
@@ -18,28 +20,52 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigation } from "@react-navigation/core";
 import Icon from "react-native-vector-icons/Ionicons";
-import Checkout from "../MercadoPago/Checkout";
-import { userStatus, reset } from "../../Redux/actions/index.js";
-
+import { userStatus, reset, alltravelstruck } from "../../Redux/actions/index.js";
+import ModalAlert from '../Añadir Transportista/ModalAlert.js'
 
 
 const HistorialDeViaje = () => {
 
+
+
+  const responlog = useSelector((store) => store.responseLog)
+  const travelstruck = useSelector((store) => store.alltraveltruck)
   const user = useSelector((store) => store.userStatus)
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  
-  
+  const [modalView, SetModalView] = useState(false);
+
+  const handleTravelOn = (id) => {
+    dispatch(alltravelstruck(id))
+  }
+
+
+/* 
+  useEffect(() => {
+    if (travelstruck) {
+      console.log("ESTO SERIAN LOS TRAVELSTRUCK", travelstruck)
+      if (travelstruck.travelinprocess.length === 0) {
+        SetModalView(true)
+      } else {
+        navigation.navigate('AdmTravelOn', travelstruck.travelinprocess[0])
+      }
+    }
+  }, [travelstruck]) */
+
+
 
   useEffect(() => {
     dispatch(userStatus())
-
     return () => {
       dispatch(reset())
     }
   }, [dispatch])
 
   console.log("Esto serian los usersWWWWWWWWWWW:", user)
+ /*  console.log("Esto serian los users:", user) */
+
+
+
 
   const CarrierContainer = (props) => {
     console.log("ESTO ES LO QUE LE VA A LLEGAR AL COMPONENTE", props)
@@ -51,15 +77,35 @@ const HistorialDeViaje = () => {
         {
           props.length !== 0 ? props.map((e, index) => {
 
+
             const propss = {
               amount : e.payment.length?e.payment.filter(p=>p.status===false)[0]?.amount:0,
               acesstoken: e.acesstoken,
               id:e.SignupId
 
             }
-            console.log("hola",propss)
+
+            const propsChat = { 
+              carrierId : e.SignupId,
+              userType : "Administrador"
+              }
+
+
+            const Pagar = (propss) =>{
+              if(propss.amount !== 0){
+              navigation.navigate('Mercadopago',propss)
+              }
+            }
+            
             return (
-              <View style={styles.viewUsers} key={index}>
+              <View  style={
+                 
+                    
+                e.status === true || e.status === false
+                  ? styles.viewUsers
+                  : styles.viewUsers2
+              } key={index}>
+                {console.log( "PROPS AMUNT",propss.amount)}
                 <Image source={{
                   uri:
                     e.carrier.photo === null || e.carrier.photo === "url"
@@ -68,30 +114,33 @@ const HistorialDeViaje = () => {
 
                 }} style={e.status === true || e.status === false ? styles.imgOn : styles.imgOff} />
                 <View style={styles.cardsText}>
-                  <Text style={styles.cardsName}>{e.carrier.name} {e.carrier.lastName}</Text>
+                  <Text style={styles.cardsName}>
+                    {e.carrier.name} {e.carrier.lastName}
+                  </Text>
                   <Text style={styles.cardsSubtitle}>{e.carrier.eMail}</Text>
+                  <Text style={styles.cardsSubtitle2}>Saldo = ${propss.amount||0}</Text>
                   <View style={styles.flexbtn}>
-                    <TouchableOpacity style={styles.btnText}>
-                      <Text style={{ fontSize: wp('2.3%') }}> HISTORIAL DE VIAJES  </Text>
+                  <TouchableOpacity style={styles.btnText} onPress={() => navigation.navigate("Chat", propsChat) } >
+                    <Icon name='chatbox-ellipses-outline' style={styles.icon} size={hp('3.5%')} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnText} onPress={() => navigation.navigate('Mercadopago',propss)}>
-                      <Text style={{ fontSize: wp('2.3%') }}> SALDO GENERADO: ${propss.amount||0} </Text>
+                    <TouchableOpacity style={styles.btnText} onPress={() => navigation.navigate("AdmTravelOn", e.SignupId)}>
+                    <Icon name='navigate-outline' style={styles.icon} size={hp('3.5%')} />
+                    </TouchableOpacity>                   
+                    <TouchableOpacity style={styles.btnText} onPress={()=>Pagar(propss)}>
+                    <Icon name='card-outline' style={styles.icon} size={hp('3.5%')} />
+                    </TouchableOpacity>                                
+                    <TouchableOpacity style={styles.btnText} onPress={() => navigation.navigate('AdmHistoryCarrier', e.SignupId)} >
+                      <Icon name='newspaper-outline' style={styles.icon} size={hp('3.5%')} />
                     </TouchableOpacity>
-                  </View>
-                  <View style={styles.flexbtn}>
-                    <TouchableOpacity style={styles.btnText}>
-                      <Text style={{ fontSize: wp('2.3%') }}> VER VIAJE ACTUAL </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnText}>
-                      <Text style={{ fontSize: wp('2.3%') }}> ENVIAR MENSAJE</Text>
-                    </TouchableOpacity>
-                  </View>
+                    
+                    </View>
+                  
                 </View>
               </View>
-            )
-          }) : (<View style={{alignContent: 'center', alignItems:'center'}}>
-              <Text style={{fontSize: hp('2%'), fontWeight:'400'}}>No hay transportistas disponibles</Text>
-               </View>)
+            );
+          }) : (<View style={{ alignContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: hp('2%'), fontWeight: '400' }}>No hay transportistas disponibles</Text>
+          </View>)
         }
 
       </View>
@@ -103,20 +152,19 @@ const HistorialDeViaje = () => {
   return (
     <View style={{ backgroundColor: "white", flex: 1 }}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={{marginBottom:hp("-2%")}}>
         <HeaderBar screen={"ProfileAdmin"} />
+        </View>
         <View style={styles.containerHeaders}>
-          <View style={{ flexDirection: 'row' }}>
-            <Text style={{ fontSize: hp("2.5%"), fontWeight: "bold" }}>
+          <View style={{ flexDirection: 'row', marginBottom:hp("-2.6%") }}>
+            <Text style={{ fontSize: hp("2.8%"), fontWeight: "bold", marginTop:hp("2%") }}>
               Controla tu Flota
             </Text>
-            <Icon name='stats-chart-outline' style={styles.icon} size={hp('2.4%')} />
+            <Icon name='stats-chart-outline' style={styles.iconn} size={hp('2.8%')} />
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('NewCarrier')}>
-            <View style={{ flexDirection: 'row' }}>
-              <Text style={styles.textViajes}>
-                Añade un nuevo transportista
-              </Text>
-              <Icon name='person-add-outline' style={styles.iconAdd} size={hp('2%')} />
+          <TouchableOpacity onPress={() => navigation.navigate('NewCarrier')} >
+            <View style={{ flexDirection: 'row', alignSelf:"flex-end", marginTop:hp("-2%"), marginRight:wp("4%") }}>
+              <Icon name='person-add-outline' style={styles.iconAdd} size={hp('4.5%')} />
             </View>
           </TouchableOpacity>
 
@@ -163,6 +211,16 @@ const HistorialDeViaje = () => {
             </View>
           </View>
         </View>
+        <Modal
+          animationType="fade"
+          transparent
+          visible={modalView}
+        >
+                <ModalAlert
+                text={'El usuario no tiene un viaje en curso'}
+                setModal={SetModalView}
+                />
+        </Modal>
       </ScrollView>
     </View>
   );
@@ -172,16 +230,24 @@ export default HistorialDeViaje;
 
 const styles = StyleSheet.create({
   flexbtn: {
+    display:"flex",
     flexDirection: 'row',
-    margin: wp('0.5%')
+    // margin: wp('0.5%'),
+    marginTop:hp("1%"),
+    marginBottom:hp("-1%"),
+    width:wp("80%"),
+    alignContent:"space-between",
+    marginLeft:wp("-7%")
   },
-  icon: {
+  iconn: {
     marginLeft: hp('1%'),
+    marginTop:hp("2.2%")
 
   },
   iconAdd: {
-    marginLeft: hp('1%'),
-    color: '#ff1c02'
+    marginRight: hp('1%'),
+    color: '#ff1c02',
+   
   },
   imgOn: {
     width: hp('12%'),
@@ -191,9 +257,9 @@ const styles = StyleSheet.create({
     borderWidth: wp('0.8%')
   },
   imgOff: {
-    width: hp('12%'),
-    height: wp('23%'),
-    borderRadius: hp('10%'),
+    width: hp('13%'),
+    height: hp('13%'),
+    borderRadius: hp('2%'),
     borderColor: '#808080',
     borderWidth: wp('0.8%')
   },
@@ -283,35 +349,62 @@ const styles = StyleSheet.create({
   viewUsers: {
     flexDirection: 'row',
     padding: wp("4%"),
-    backgroundColor: "#EAB6AD", //"#FFC107",
+    backgroundColor: "lightgrey", //"#FFC107",
     marginTop: wp("1%"),
     marginBottom: wp("2.5%"),
-    borderColor: "#ff1c02",
-    width: wp('87%'),
-    borderWidth: hp('0.15%'),
+    marginLeft:wp("-1.7%"),
+    borderColor:"green",
+    width: wp('90%'),
+    borderWidth: hp('0.35%'),
     shadowOpacity: 80,
+    // shadowColor:"black",
+    elevation: 20,
+    borderRadius: wp('2.5%')
+  },
+  viewUsers2: {
+    flexDirection: 'row',
+    padding: wp("4%"),
+    backgroundColor: "lightgrey", //"#FFC107",
+    marginTop: wp("1%"),
+    marginBottom: wp("2.5%"),
+    marginLeft:wp("-1.7%"),
+    borderColor: "red",
+    width: wp('90%'),
+    borderWidth: hp('0.35%'),
+    shadowOpacity: 5,
+    shadowColor:"red",
     elevation: 15,
-    borderRadius: wp('4%')
+    borderRadius: wp('2.5%')
   },
   cardsName: {
-    fontSize: hp('2%'),
+    fontSize: hp('2.8%'),
+    fontWeight:"bold"
   },
   cardsSubtitle: {
-    fontSize: hp('1.5%'),
+    fontSize: hp('1.8%'),
     color: '#808080'
+  },
+  cardsSubtitle2: {
+    fontSize: hp('2.5%'),
+    marginTop:hp("0.5%")
   },
   cardsText: {
     position: "relative",
     marginLeft: wp('5%')
   },
   btnText: {
-    padding: wp("2%"),
-    backgroundColor: "#fff", //"#FFC107",
-    marginTop: wp("1%"),
-    width: wp('25%'),
-    shadowOpacity: 80,
+    // padding: wp("2%"),
+    backgroundColor: "whitesmoke", //"#FFC107",
+    // marginTop: wp("1%"),
+    width: wp('10%'),
+    height:wp('10%'),
+    // shadowOpacity: 80,
     elevation: 15,
-    marginRight: wp('0.6')
+    marginLeft: wp("5%"),
+    justifyContent:"center",
+    alignItems:"center",
+    borderRadius:wp("5%"),
+    borderWidth:2
   },
 
 });

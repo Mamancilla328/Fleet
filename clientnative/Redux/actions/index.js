@@ -394,13 +394,28 @@ export function alltravelstruck (signupId) {
   return async function (dispatch) {
     try {
       const confirm = await axios.get(`${ API_URLS }/api/alltraveltruck/${signupId}`);
-      console.log("Leegando a la action alltravelstruck ",confirm.data);
+   /*    console.log("Leegando a la action alltravelstruck ",confirm.data); */
       return dispatch({
         type: "ALL_TRAVELS_TRUCK",
         payload: confirm.data
       })
     } catch (error) {
       console.log("Error", error)
+    }
+  }
+}
+
+export function updateVehicle (payload) {
+  return async function (dispatch) {
+    try {
+      const update = await axios.post(`${API_URLS}/api/updateVehicle`, payload)
+      return dispatch({
+        type: 'UPDATE_VEHICULE',
+        payload: update.data
+      })
+
+    } catch (error) {
+        console.log("Error", error)
     }
   }
 }

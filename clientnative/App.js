@@ -28,19 +28,17 @@ import Mercadopago from "./Components/MercadoPago/Mercadopago";
 import StartCarrier from './Components/Travel/StartCarrier';
 import ScreenAccessToken from './Components/MercadoPago/ScreenAccessToken.js'
 import HistoryCarrier from "./Components/Historial de viaje/HistoryCarrier"
+import Chat from "./Components/Chat/Chat"
 import MapTravel from './Components/ViewMaps/MapTravel'
-
+import AdmTravelOn from './Components/Historial de viaje/AdmTravelOn.js'
+import TravelOn from "./Components/Historial de viaje/TravelOn.js"
+import AdmHistoryCarrier from "./Components/Historial de viaje/AdmHistoryCarrier.js"
 
 LogBox.ignoreLogs([
   "[react-native-gesture-handler] Seems like you\'re using an old API with gesture components, check out new Gestures system!",
 ]);
 
-
-
 const Stack = createStackNavigator();
-
-
-
 
 const App = () => {
 
@@ -167,6 +165,26 @@ const App = () => {
             <Stack.Screen
               name="HistoryCarrier"
               component={HistoryCarrier}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Chat"
+              component={Chat}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="TravelOn"
+              component={TravelOn}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AdmTravelOn"
+              component={AdmTravelOn}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AdmHistoryCarrier"
+              component={AdmHistoryCarrier}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

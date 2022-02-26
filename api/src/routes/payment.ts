@@ -1,20 +1,28 @@
 import { Response, Request, Router, NextFunction } from 'express';
 import { Signup } from '../models/Signup';
 import { Carrier }  from '../models/Carrier';
-import {Payment} from '../models/Payment'
 import axios from 'axios';
+import {Payment} from '../models/Payment'
+ 
 import { Travel } from '../models/Travel';
 import { nextTick } from 'process';
 import { where } from 'sequelize/dist';
 import { uuid } from 'uuidv4';
 import { Truck } from '../models/Truck';
+
+const {
+	API_URLS
+  } = process.env;
+
+
 const mercadopago = require('mercadopago');
 
 const router=Router()
 
-// router.get('/payment', async (req: Request, res: Response) => {
-//     res.send('Allan Torres line 15');
-//   });
+router.get('/payment', async (req: Request, res: Response) => {
+    res.send('Allan Torres line 15');
+  });
+
 
 router.post("/mercadopago", async (req, res) => {
   const { unit_price, access_token, title, quantity,id } = req.body;
@@ -23,18 +31,18 @@ router.post("/mercadopago", async (req, res) => {
   console.log("ESTO ES REQ.BODY", req.body);
   try {
 
-    let idTruck= await Truck.findOne({
-      where:{
-        SignupId:id
-      }
-    })
+    // let idTruck= await Truck.findOne({
+    //   where:{
+    //     SignupId:id
+    //   }
+    // })
 
-    console.log('TRUCK',idTruck)
-    if(idTruck){
-      await Payment.update({status:true},{where:{TruckId:idTruck.id}})
-      await Travel.update({finishedTravel:'finish',statusPay:'pay'},{where:{truckId:idTruck.id}})
+    // console.log('TRUCK',idTruck)
+    // if(idTruck){
+    //   await Payment.update({status:true},{where:{TruckId:idTruck.id}})
+    //   await Travel.update({finishedTravel:'finish',statusPay:'pay'},{where:{truckId:idTruck.id}})
 
-    }
+    // }
 
 
 
@@ -46,7 +54,7 @@ router.post("/mercadopago", async (req, res) => {
     let preference = {
       "items": [
           {
-            "id":id,
+            // "id":id,
              "title": title,
                   "description": "Dummy Item Description",
                   "quantity": quantity,
@@ -59,16 +67,18 @@ router.post("/mercadopago", async (req, res) => {
       },
       "auto_return": "all",
       "back_urls" : {
-          "failure": `https://superfleetback.herokuapp.com/api/render?x=0`,
-          "pending": `https://superfleetback.herokuapp.com/api/render?x=1`,
-          "success": `https://superfleetback.herokuapp.com/api/render?x=2`
+          "failure": `${API_URLS}/render?x=0&id=${id}`,
+          "pending": `${API_URLS}/api/render?x=1&id=${id}`,
+          "success": `${API_URLS}/api/render?x=2&id=${id}`
       }
   }
 
     let answer = await mercadopago.preferences.create(preference);
 
     const response = answer.body.id;
-    const init_points = answer.body.sandbox_init_point;
+    const init_points = answer.body.init_point;
+
+    
 
     res.json({ response, init_points });
   } catch (err) {
@@ -100,22 +110,14 @@ catch(err){
 }
 });
 
-// router.get('totalprice',(req: Request, res: Response, next: NextFunction) => {
-//   let {id} = req.query
-//   try {
 
-
-    
-//   } catch (error) {
-//     next(error)
-//   }
-// })
 
 router.get('/render', async(req: Request , res: Response, ) => {
 
-  let {x} = req.query
+  let {x,id} = req.query
   // const {id} = req.params
 
+  console.log("req.query",req.query);
   
 
   if(x === "0"){
@@ -133,6 +135,7 @@ router.get('/render', async(req: Request , res: Response, ) => {
         <h1 style="text-align:center ; margin-top: 15vh ; font-size: 70px">Pago fallido!</h1>
       </body>
     `);
+
   }
   if (x==="1") {
     return res.send(`
@@ -150,6 +153,19 @@ router.get('/render', async(req: Request , res: Response, ) => {
   }
 
   if(x==="2"){
+
+    let idTruck= await Truck.findOne({
+      where:{
+        SignupId:id
+      }
+    })
+
+    console.log('TRUCK',idTruck)
+    if(idTruck){
+      await Payment.update({status:true},{where:{TruckId:idTruck.id}})
+      await Travel.update({finishedTravel:'finish',statusPay:'pay'},{where:{truckId:idTruck.id}})
+
+    
     return   res.send(`
     <body style="background-color:white; color: white " >
     <img src="https://user-images.githubusercontent.com/70895686/153325791-f3df7c3a-84d1-4d71-a35a-96f6be0f611e.png" style="display: block;
@@ -160,7 +176,7 @@ router.get('/render', async(req: Request , res: Response, ) => {
     " />
       <h1 style="text-align:center ; margin-top: 15vh ; font-size: 70px; color: #009de2 ">Pago exitoso!</h1>
     </body>
-  `)
+  `)}
   }
   res.send(`Error en el paramentro x = ${x}`)
 })
@@ -209,7 +225,7 @@ router.get('/amountCarrier/:idSignup', async (req: Request, res: Response , next
           TruckId: truckId.id//falta ver el status
         },attributes: [ 'amount' ]
       });
-      if(payment.length){
+      if(payment.length > 0){
         let saldo=payment.map(p=>Number(p.amount)).reduce((previousValue, currentValue) => previousValue + currentValue)
       
       res.json({menssage:'Saldo',payload:saldo})
